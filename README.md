@@ -7,4 +7,10 @@ Project to translate and create Thirukkural epub book in multiple languages
 
 ### Commands
 
+#### Run Maven build to download dependencies and generate artefacts
+
     ./mvnw clean install
+
+#### Transform raw json to structured json
+
+    ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=transform_raw"
