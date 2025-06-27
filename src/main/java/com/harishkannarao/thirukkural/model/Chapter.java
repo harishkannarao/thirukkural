@@ -15,7 +15,7 @@ public record Chapter(
         String iyalName,
         String iyalTransliteration,
         String iyalTranslation,
-        List<JsonNode> kurals
+        List<Couplet> kurals
 ) {
 
 }

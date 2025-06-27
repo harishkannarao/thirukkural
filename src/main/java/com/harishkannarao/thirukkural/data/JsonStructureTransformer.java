@@ -3,6 +3,7 @@ package com.harishkannarao.thirukkural.data;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.harishkannarao.thirukkural.model.Chapter;
+import com.harishkannarao.thirukkural.model.Couplet;
 import com.harishkannarao.thirukkural.model.Volume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,18 @@ public class JsonStructureTransformer {
                         .map(jsonNodes -> {
                             JsonNode aKural = jsonNodes.getFirst();
                             int chapterNumber = (aKural.get("Number").asInt() / 10) + 1;
+                            List<Couplet> couplets = jsonNodes.stream()
+                                    .map(node -> new Couplet(
+                                            node.get("Number").asInt(),
+                                            node.get("Line1").asText(),
+                                            node.get("Line2").asText(),
+                                            node.get("transliteration1").asText(),
+                                            node.get("transliteration2").asText(),
+                                            node.get("mv").asText(),
+                                            node.get("explanation").asText()
+                                    ))
+                                    .sorted(Comparator.comparingInt(Couplet::number))
+                                    .toList();
                             return new Chapter(
                                     chapterNumber,
                                     aKural.get("adikaram_name").asText(),
@@ -62,7 +75,7 @@ public class JsonStructureTransformer {
                                     aKural.get("iyal_name").asText(),
                                     aKural.get("iyal_transliteration").asText(),
                                     aKural.get("iyal_translation").asText(),
-                                    jsonNodes);
+                                    couplets);
                         })
                         .sorted(Comparator.comparingInt(Chapter::number))
                         .toList();
