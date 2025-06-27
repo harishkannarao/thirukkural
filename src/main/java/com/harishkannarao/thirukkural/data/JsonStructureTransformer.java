@@ -46,15 +46,37 @@ public class JsonStructureTransformer {
             if (rootNode.isArray()) {
                 Map<String, List<JsonNode>> groupedByChapters = StreamSupport.stream(rootNode.spliterator(), false)
                         .collect(Collectors.groupingBy(element -> element.get("adikaram_transliteration").asText()));
-                record Chapter(int number, String adikaramName, String adikaramTransliteration, String adikaramTranslation, List<JsonNode> kurals) {                }
+                record Chapter(
+                        int number,
+                        String adikaramName,
+                        String adikaramTransliteration,
+                        String adikaramTranslation,
+                        String paulName,
+                        String paulTransliteration,
+                        String paulTranslation,
+                        String iyalName,
+                        String iyalTransliteration,
+                        String iyalTranslation,
+                        List<JsonNode> kurals
+                ) {
+
+                }
                 List<Chapter> chapters = groupedByChapters.values().stream()
                         .map(jsonNodes -> {
                             JsonNode kural = jsonNodes.stream().findAny().orElseThrow();
                             int chapterNumber = (kural.get("Number").asInt() / 10) + 1;
-                            String adikaramName = kural.get("adikaram_name").asText();
-                            String adikaramTransliteration = kural.get("adikaram_transliteration").asText();
-                            String adikaramTranslation = kural.get("adikaram_translation").asText();
-                            return new Chapter(chapterNumber, adikaramName, adikaramTransliteration, adikaramTranslation, jsonNodes);
+                            return new Chapter(
+                                    chapterNumber,
+                                    kural.get("adikaram_name").asText(),
+                                    kural.get("adikaram_transliteration").asText(),
+                                    kural.get("adikaram_translation").asText(),
+                                    kural.get("paul_name").asText(),
+                                    kural.get("paul_transliteration").asText(),
+                                    kural.get("paul_translation").asText(),
+                                    kural.get("iyal_name").asText(),
+                                    kural.get("iyal_transliteration").asText(),
+                                    kural.get("iyal_translation").asText(),
+                                    jsonNodes);
                         })
                         .sorted(Comparator.comparingInt(Chapter::number))
                         .toList();
