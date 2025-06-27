@@ -13,6 +13,7 @@ import org.springframework.util.MultiValueMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,7 +46,19 @@ public class JsonStructureTransformer {
             if (rootNode.isArray()) {
                 Map<String, List<JsonNode>> groupedByChapters = StreamSupport.stream(rootNode.spliterator(), false)
                         .collect(Collectors.groupingBy(element -> element.get("adikaram_transliteration").asText()));
-                String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(groupedByChapters);
+                record Chapter(int number, String adikaramName, String adikaramTransliteration, String adikaramTranslation, List<JsonNode> kurals) {                }
+                List<Chapter> chapters = groupedByChapters.values().stream()
+                        .map(jsonNodes -> {
+                            JsonNode kural = jsonNodes.stream().findAny().orElseThrow();
+                            int chapterNumber = (kural.get("Number").asInt() / 10) + 1;
+                            String adikaramName = kural.get("adikaram_name").asText();
+                            String adikaramTransliteration = kural.get("adikaram_transliteration").asText();
+                            String adikaramTranslation = kural.get("adikaram_translation").asText();
+                            return new Chapter(chapterNumber, adikaramName, adikaramTransliteration, adikaramTranslation, jsonNodes);
+                        })
+                        .sorted(Comparator.comparingInt(Chapter::number))
+                        .toList();
+                String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(chapters);
                 Files.writeString(Paths.get(outputJsonPath), jsonString);
             }
         } catch (IOException e) {
