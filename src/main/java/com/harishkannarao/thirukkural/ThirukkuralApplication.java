@@ -1,5 +1,6 @@
 package com.harishkannarao.thirukkural;
 
+import com.harishkannarao.thirukkural.data.JsonStructureTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -17,7 +18,10 @@ public class ThirukkuralApplication {
 		ConfigurableApplicationContext context = SpringApplication.run(ThirukkuralApplication.class, args);
 		String task = context.getEnvironment().getProperty("task");
 		if (Objects.equals(task, "transform_raw")) {
-			LOG.info("transform");
+
+			JsonStructureTransformer structureTransformer = context.getBean(JsonStructureTransformer.class);
+			structureTransformer.transform();
+
 		}
 	}
 
