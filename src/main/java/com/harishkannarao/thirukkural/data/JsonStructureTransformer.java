@@ -63,24 +63,56 @@ public class JsonStructureTransformer {
                 }
                 List<Chapter> chapters = groupedByChapters.values().stream()
                         .map(jsonNodes -> {
-                            JsonNode kural = jsonNodes.stream().findAny().orElseThrow();
-                            int chapterNumber = (kural.get("Number").asInt() / 10) + 1;
+                            JsonNode aKural = jsonNodes.getFirst();
+                            int chapterNumber = (aKural.get("Number").asInt() / 10) + 1;
                             return new Chapter(
                                     chapterNumber,
-                                    kural.get("adikaram_name").asText(),
-                                    kural.get("adikaram_transliteration").asText(),
-                                    kural.get("adikaram_translation").asText(),
-                                    kural.get("paul_name").asText(),
-                                    kural.get("paul_transliteration").asText(),
-                                    kural.get("paul_translation").asText(),
-                                    kural.get("iyal_name").asText(),
-                                    kural.get("iyal_transliteration").asText(),
-                                    kural.get("iyal_translation").asText(),
+                                    aKural.get("adikaram_name").asText(),
+                                    aKural.get("adikaram_transliteration").asText(),
+                                    aKural.get("adikaram_translation").asText(),
+                                    aKural.get("paul_name").asText(),
+                                    aKural.get("paul_transliteration").asText(),
+                                    aKural.get("paul_translation").asText(),
+                                    aKural.get("iyal_name").asText(),
+                                    aKural.get("iyal_transliteration").asText(),
+                                    aKural.get("iyal_translation").asText(),
                                     jsonNodes);
                         })
                         .sorted(Comparator.comparingInt(Chapter::number))
                         .toList();
-                String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(chapters);
+                Map<String, List<Chapter>> groupedByVolumes = chapters.stream()
+                        .collect(Collectors.groupingBy(chapter -> chapter.paulTransliteration));
+                record Volume(
+                        int number,
+                        String paulName,
+                        String paulTransliteration,
+                        String paulTranslation,
+                        List<Chapter> chapters
+                ) {
+
+                }
+                List<Volume> volumes = groupedByVolumes.values().stream()
+                        .map(chapterList -> {
+                            Chapter aChapter = chapterList.getFirst();
+                            int volumeNumber = 0;
+                            if (aChapter.number >= 1 && aChapter.number <= 38) {
+                                volumeNumber = 1;
+                            } else if (aChapter.number >= 39 && aChapter.number <= 108) {
+                                volumeNumber = 2;
+                            } else {
+                                volumeNumber = 3;
+                            }
+                            return new Volume(
+                                    volumeNumber,
+                                    aChapter.paulName,
+                                    aChapter.paulTransliteration,
+                                    aChapter.paulTranslation,
+                                    chapterList
+                            );
+                        })
+                        .sorted(Comparator.comparingInt(Volume::number))
+                        .toList();
+                String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(volumes);
                 Files.writeString(Paths.get(outputJsonPath), jsonString);
             }
         } catch (IOException e) {
