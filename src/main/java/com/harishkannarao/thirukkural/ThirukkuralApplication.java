@@ -18,10 +18,8 @@ public class ThirukkuralApplication {
 		ConfigurableApplicationContext context = SpringApplication.run(ThirukkuralApplication.class, args);
 		String task = context.getEnvironment().getProperty("task");
 		if (Objects.equals(task, "transform_raw")) {
-
 			JsonStructureTransformer structureTransformer = context.getBean(JsonStructureTransformer.class);
 			structureTransformer.transform();
-
 		}
 	}
 

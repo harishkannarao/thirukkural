@@ -2,13 +2,13 @@ package com.harishkannarao.thirukkural.data;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.harishkannarao.thirukkural.model.Chapter;
+import com.harishkannarao.thirukkural.model.Volume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,21 +46,7 @@ public class JsonStructureTransformer {
             if (rootNode.isArray()) {
                 Map<String, List<JsonNode>> groupedByChapters = StreamSupport.stream(rootNode.spliterator(), false)
                         .collect(Collectors.groupingBy(element -> element.get("adikaram_transliteration").asText()));
-                record Chapter(
-                        int number,
-                        String adikaramName,
-                        String adikaramTransliteration,
-                        String adikaramTranslation,
-                        String paulName,
-                        String paulTransliteration,
-                        String paulTranslation,
-                        String iyalName,
-                        String iyalTransliteration,
-                        String iyalTranslation,
-                        List<JsonNode> kurals
-                ) {
 
-                }
                 List<Chapter> chapters = groupedByChapters.values().stream()
                         .map(jsonNodes -> {
                             JsonNode aKural = jsonNodes.getFirst();
@@ -81,32 +67,24 @@ public class JsonStructureTransformer {
                         .sorted(Comparator.comparingInt(Chapter::number))
                         .toList();
                 Map<String, List<Chapter>> groupedByVolumes = chapters.stream()
-                        .collect(Collectors.groupingBy(chapter -> chapter.paulTransliteration));
-                record Volume(
-                        int number,
-                        String paulName,
-                        String paulTransliteration,
-                        String paulTranslation,
-                        List<Chapter> chapters
-                ) {
+                        .collect(Collectors.groupingBy(Chapter::paulTransliteration));
 
-                }
                 List<Volume> volumes = groupedByVolumes.values().stream()
                         .map(chapterList -> {
                             Chapter aChapter = chapterList.getFirst();
                             int volumeNumber = 0;
-                            if (aChapter.number >= 1 && aChapter.number <= 38) {
+                            if (aChapter.number() >= 1 && aChapter.number() <= 38) {
                                 volumeNumber = 1;
-                            } else if (aChapter.number >= 39 && aChapter.number <= 108) {
+                            } else if (aChapter.number() >= 39 && aChapter.number() <= 108) {
                                 volumeNumber = 2;
                             } else {
                                 volumeNumber = 3;
                             }
                             return new Volume(
                                     volumeNumber,
-                                    aChapter.paulName,
-                                    aChapter.paulTransliteration,
-                                    aChapter.paulTranslation,
+                                    aChapter.paulName(),
+                                    aChapter.paulTransliteration(),
+                                    aChapter.paulTranslation(),
                                     chapterList
                             );
                         })
