@@ -2,6 +2,7 @@ package com.harishkannarao.thirukkural.data;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.harishkannarao.thirukkural.model.Book;
 import com.harishkannarao.thirukkural.model.Chapter;
 import com.harishkannarao.thirukkural.model.Couplet;
 import com.harishkannarao.thirukkural.model.Volume;
@@ -103,7 +104,8 @@ public class JsonStructureTransformer {
                         })
                         .sorted(Comparator.comparingInt(Volume::number))
                         .toList();
-                String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(volumes);
+                Book book = new Book("திருக்குறள்", "Thirukkural", volumes);
+                String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(book);
                 Files.writeString(Paths.get(outputJsonPath), jsonString);
             }
         } catch (IOException e) {
