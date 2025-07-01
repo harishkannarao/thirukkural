@@ -1,5 +1,6 @@
 package com.harishkannarao.thirukkural.translate;
 
+import com.harishkannarao.thirukkural.model.CacheKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class TranslationService {
@@ -26,6 +28,7 @@ public class TranslationService {
     private final ClassPathResource transliterateUserTemplate = new ClassPathResource(
             "/prompts/transliterate-user-template.st");
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final ConcurrentHashMap<CacheKey, String> transliterateCache = new ConcurrentHashMap<>();
 
     @Autowired
     public TranslationService(ChatClient chatClient) {
@@ -67,6 +70,8 @@ public class TranslationService {
     }
 
     public String transliterateWithCache(String sourceLang, String targetLang, String text) {
-        return "";
+        return transliterateCache.computeIfAbsent(
+                new CacheKey(sourceLang, targetLang, text),
+                key -> transliterate(key.sourceLang(), key.targetLang(), key.text()));
     }
 }
