@@ -28,6 +28,7 @@ public class TranslationService {
     private final ClassPathResource transliterateUserTemplate = new ClassPathResource(
             "/prompts/transliterate-user-template.st");
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final ConcurrentHashMap<CacheKey, String> translatedCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<CacheKey, String> transliterateCache = new ConcurrentHashMap<>();
 
     @Autowired
@@ -67,6 +68,12 @@ public class TranslationService {
                 .content();
         log.info("Transliterated Input {} Output {}", text, translatedText);
         return translatedText;
+    }
+
+    public String translateWithCache(String sourceLang, String targetLang, String text) {
+        return translatedCache.computeIfAbsent(
+                new CacheKey(sourceLang, targetLang, text),
+                key -> translate(key.sourceLang(), key.targetLang(), key.text()));
     }
 
     public String transliterateWithCache(String sourceLang, String targetLang, String text) {
