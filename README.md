@@ -15,6 +15,14 @@ Project to translate and create Thirukkural epub book in multiple languages
 
     ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=transform_raw --input.json=./data/thirukkural_raw.json --output.json=./data/thirukkural_structured.json"
 
-#### Transform structured json to another language
+#### Transform structured json to another language using Local Ollama AI
 
-    ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=transform_language --input.json=./data/thirukkural_structured.json --output.json=./data/thirukkural_english.json --source.language=Tamil --target.language=English"
+    ollama pull llama3.2:3b
+
+    ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=transform_language --input.json=./data/thirukkural_structured.json --output.json=./data/thirukkural_english.json --source.language=Tamil --target.language=English --app.ai.chat.provider=ollama"
+
+#### Transform structured json to another language using OpenAI
+
+    export OPEN_AI_KEY=<<Open AI Key>>
+
+    ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=transform_language --input.json=./data/thirukkural_structured.json --output.json=./data/thirukkural_english.json --source.language=Tamil --target.language=English --app.ai.chat.provider=openai"
