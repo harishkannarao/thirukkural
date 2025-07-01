@@ -1,3 +1,27 @@
 spring:
   application:
     name: "thirukkural"
+  threads:
+    virtual:
+      enabled: true
+  ai:
+    model:
+      chat: ${app.ai.chat.provider}
+    chat:
+      client:
+        enabled: false
+    ollama:
+      base-url: "${AI_OLLAMA_BASE_URL:http://localhost:11434}"
+    openai:
+      api-key: ${OPEN_AI_KEY}
+      base-url: ${OPEN_AI_BASE_URL:https://api.openai.com}
+      chat:
+        completions-path: "/v1/chat/completions"
+        options:
+          model: ${OPEN_AI_CHAT_MODEL:gpt-4o}
+
+app:
+  ai:
+    chat:
+      provider: "${APP_AI_CHAT_PROVIDER:ollama}"
+      model: "${APP_AI_CHAT_MODEL:llama3.2:3b}"
