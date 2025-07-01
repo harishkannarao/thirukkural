@@ -14,3 +14,7 @@ Project to translate and create Thirukkural epub book in multiple languages
 #### Transform raw json to structured json
 
     ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=transform_raw --input.json=./data/thirukkural_raw.json --output.json=./data/thirukkural_structured.json"
+
+#### Transform structured json to another language
+
+    ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=transform_language --input.json=./data/thirukkural_structured.json --output.json=./data/thirukkural_english.json --source.language=Tamil --target.language=English"

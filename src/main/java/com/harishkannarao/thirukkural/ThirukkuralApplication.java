@@ -1,6 +1,7 @@
 package com.harishkannarao.thirukkural;
 
 import com.harishkannarao.thirukkural.data.JsonStructureTransformer;
+import com.harishkannarao.thirukkural.data.LanguageTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -20,6 +21,9 @@ public class ThirukkuralApplication {
 		if (Objects.equals(task, "transform_raw")) {
 			JsonStructureTransformer structureTransformer = context.getBean(JsonStructureTransformer.class);
 			structureTransformer.transform();
+		} else if (Objects.equals(task, "transform_language")) {
+			LanguageTransformer languageTransformer = context.getBean(LanguageTransformer.class);
+			languageTransformer.transform();
 		}
 	}
 
