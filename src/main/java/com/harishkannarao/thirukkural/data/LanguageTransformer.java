@@ -41,7 +41,7 @@ public class LanguageTransformer {
         this.targetLanguage = targetLanguage;
     }
 
-    public void transform() {
+    public void transformBook() {
         log.info("Transforming from {} to {}", tamil, targetLanguage);
         try {
             String inputJson = Files.readString(Paths.get(inputJsonPath));
@@ -52,61 +52,7 @@ public class LanguageTransformer {
 
             List<Volume> volumes = inputBook.volumes()
                     .stream()
-                    .limit(1)
-                    .map(volume -> {
-                        log.info("Transforming volume {}", volume.number());
-                        String paulName = volume.paulName();
-                        String englishPaulName = volume.paulTranslation();
-                        String transliteratedPaul = translationService.transliterateWithCache(tamil, targetLanguage, paulName);
-                        String translatedPaul = translationService.translateWithCache(english, targetLanguage, englishPaulName);
-                        List<Chapter> chapters = volume.chapters().stream()
-                                .limit(2)
-                                .map(chapter -> {
-                                    log.info("Transforming chapter {}", chapter.number());
-                                    String iyalName = chapter.iyalName();
-                                    String adikaramName = chapter.adikaramName();
-                                    String translatedIyalName = translationService.translateWithCache(english, targetLanguage, chapter.iyalTranslation());
-                                    String translatedAdikaramName = translationService.translateWithCache(english, targetLanguage, chapter.adikaramTranslation());
-                                    String transliteratedIyalName = translationService.transliterateWithCache(tamil, targetLanguage, iyalName);
-                                    String transliteratedAdikaramName = translationService.transliterateWithCache(tamil, targetLanguage, adikaramName);
-                                    List<Couplet> kurals = chapter.kurals().stream()
-                                            .limit(2)
-                                            .map(couplet -> {
-                                                log.info("Transforming kural {}", couplet.number());
-                                                String line1 = couplet.line1();
-                                                String line2 = couplet.line2();
-                                                String description = couplet.description();
-                                                String transliteratedLine1 = translationService.transliterate(tamil, targetLanguage, line1);
-                                                String transliteratedLine2 = translationService.transliterate(tamil, targetLanguage, line2);
-                                                String translated = translationService.translate(tamil, targetLanguage, description);
-                                                return new Couplet(
-                                                        couplet.number(),
-                                                        line1,
-                                                        line2,
-                                                        transliteratedLine1,
-                                                        transliteratedLine2,
-                                                        description,
-                                                        translated
-                                                );
-                                            })
-                                            .toList();
-                                    return new Chapter(
-                                            chapter.number(),
-                                            adikaramName,
-                                            transliteratedAdikaramName,
-                                            translatedAdikaramName,
-                                            paulName,
-                                            transliteratedPaul,
-                                            translatedPaul,
-                                            iyalName,
-                                            transliteratedIyalName,
-                                            translatedIyalName,
-                                            kurals
-                                    );
-                                })
-                                .toList();
-                        return new Volume(volume.number(), paulName, transliteratedPaul, translatedPaul, chapters);
-                    })
+                    .map(this::transformVolume)
                     .toList();
             Book outpuBook = new Book(inputBook.name(), transliteratedName, volumes);
 
@@ -116,5 +62,62 @@ public class LanguageTransformer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Volume transformVolume(Volume volume) {
+        log.info("Transforming volume {}", volume.number());
+        String paulName = volume.paulName();
+        String englishPaulName = volume.paulTranslation();
+        String transliteratedPaul = translationService.transliterateWithCache(tamil, targetLanguage, paulName);
+        String translatedPaul = translationService.translateWithCache(english, targetLanguage, englishPaulName);
+        List<Chapter> chapters = volume.chapters().stream()
+                .map(chapter -> transformChapter(chapter, paulName, transliteratedPaul, translatedPaul))
+                .toList();
+        return new Volume(volume.number(), paulName, transliteratedPaul, translatedPaul, chapters);
+    }
+
+    private Chapter transformChapter(Chapter chapter, String paulName, String transliteratedPaul, String translatedPaul) {
+        log.info("Transforming chapter {}", chapter.number());
+        String iyalName = chapter.iyalName();
+        String adikaramName = chapter.adikaramName();
+        String translatedIyalName = translationService.translateWithCache(english, targetLanguage, chapter.iyalTranslation());
+        String translatedAdikaramName = translationService.translateWithCache(english, targetLanguage, chapter.adikaramTranslation());
+        String transliteratedIyalName = translationService.transliterateWithCache(tamil, targetLanguage, iyalName);
+        String transliteratedAdikaramName = translationService.transliterateWithCache(tamil, targetLanguage, adikaramName);
+        List<Couplet> kurals = chapter.kurals().stream()
+                .map(this::transformKural)
+                .toList();
+        return new Chapter(
+                chapter.number(),
+                adikaramName,
+                transliteratedAdikaramName,
+                translatedAdikaramName,
+                paulName,
+                transliteratedPaul,
+                translatedPaul,
+                iyalName,
+                transliteratedIyalName,
+                translatedIyalName,
+                kurals
+        );
+    }
+
+    private Couplet transformKural(Couplet couplet) {
+        log.info("Transforming kural {}", couplet.number());
+        String line1 = couplet.line1();
+        String line2 = couplet.line2();
+        String description = couplet.description();
+        String transliteratedLine1 = translationService.transliterate(tamil, targetLanguage, line1);
+        String transliteratedLine2 = translationService.transliterate(tamil, targetLanguage, line2);
+        String translated = translationService.translate(tamil, targetLanguage, description);
+        return new Couplet(
+                couplet.number(),
+                line1,
+                line2,
+                transliteratedLine1,
+                transliteratedLine2,
+                description,
+                translated
+        );
     }
 }

@@ -23,7 +23,7 @@ public class ThirukkuralApplication {
 			structureTransformer.transform();
 		} else if (Objects.equals(task, "transform_language")) {
 			LanguageTransformer languageTransformer = context.getBean(LanguageTransformer.class);
-			languageTransformer.transform();
+			languageTransformer.transformBook();
 		}
 	}
 
