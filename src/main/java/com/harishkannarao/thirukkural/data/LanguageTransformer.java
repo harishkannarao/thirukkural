@@ -24,7 +24,8 @@ public class LanguageTransformer {
     private final TranslationService translationService;
     private final String inputJsonPath;
     private final String outputJsonPath;
-    private final String sourceLanguage;
+    private final String tamil = "Tamil";
+    private final String english = "English";
     private final String targetLanguage;
 
     public LanguageTransformer(
@@ -32,50 +33,52 @@ public class LanguageTransformer {
             TranslationService translationService,
             @Value("${input.json}") String inputJsonPath,
             @Value("${output.json}") String outputJsonPath,
-            @Value("${source.language}") String sourceLanguage,
             @Value("${target.language}") String targetLanguage) {
         this.objectMapper = objectMapper;
         this.translationService = translationService;
         this.inputJsonPath = inputJsonPath;
         this.outputJsonPath = outputJsonPath;
-        this.sourceLanguage = sourceLanguage;
         this.targetLanguage = targetLanguage;
     }
 
     public void transform() {
-        log.info("Transforming from {} to {}", sourceLanguage, targetLanguage);
+        log.info("Transforming from {} to {}", tamil, targetLanguage);
         try {
             String inputJson = Files.readString(Paths.get(inputJsonPath));
             Book inputBook = objectMapper.readValue(inputJson, Book.class);
 
             String name = inputBook.name();
-            String transliteratedName = translationService.transliterateWithCache(sourceLanguage, targetLanguage, name);
+            String transliteratedName = translationService.transliterateWithCache(tamil, targetLanguage, name);
 
             List<Volume> volumes = inputBook.volumes()
                     .stream()
                     .limit(1)
                     .map(volume -> {
+                        log.info("Transforming volume {}", volume.number());
                         String paulName = volume.paulName();
-                        String transliteratedPaul = translationService.transliterateWithCache(sourceLanguage, targetLanguage, paulName);
-                        String translatedPaul = translationService.translateWithCache(sourceLanguage, targetLanguage, paulName);
+                        String englishPaulName = volume.paulTranslation();
+                        String transliteratedPaul = translationService.transliterateWithCache(tamil, targetLanguage, paulName);
+                        String translatedPaul = translationService.translateWithCache(english, targetLanguage, englishPaulName);
                         List<Chapter> chapters = volume.chapters().stream()
                                 .limit(2)
                                 .map(chapter -> {
+                                    log.info("Transforming chapter {}", chapter.number());
                                     String iyalName = chapter.iyalName();
                                     String adikaramName = chapter.adikaramName();
-                                    String translatedIyalName = translationService.translateWithCache(sourceLanguage, targetLanguage, iyalName);
-                                    String translatedAdikaramName = translationService.translateWithCache(sourceLanguage, targetLanguage, adikaramName);
-                                    String transliteratedIyalName = translationService.transliterateWithCache(sourceLanguage, targetLanguage, iyalName);
-                                    String transliteratedAdikaramName = translationService.transliterateWithCache(sourceLanguage, targetLanguage, adikaramName);
+                                    String translatedIyalName = translationService.translateWithCache(english, targetLanguage, chapter.iyalTranslation());
+                                    String translatedAdikaramName = translationService.translateWithCache(english, targetLanguage, chapter.adikaramTranslation());
+                                    String transliteratedIyalName = translationService.transliterateWithCache(tamil, targetLanguage, iyalName);
+                                    String transliteratedAdikaramName = translationService.transliterateWithCache(tamil, targetLanguage, adikaramName);
                                     List<Couplet> kurals = chapter.kurals().stream()
                                             .limit(2)
                                             .map(couplet -> {
+                                                log.info("Transforming kural {}", couplet.number());
                                                 String line1 = couplet.line1();
                                                 String line2 = couplet.line2();
                                                 String description = couplet.description();
-                                                String transliteratedLine1 = translationService.transliterate(sourceLanguage, targetLanguage, line1);
-                                                String transliteratedLine2 = translationService.transliterate(sourceLanguage, targetLanguage, line2);
-                                                String translated = translationService.translate(sourceLanguage, targetLanguage, description);
+                                                String transliteratedLine1 = translationService.transliterate(tamil, targetLanguage, line1);
+                                                String transliteratedLine2 = translationService.transliterate(tamil, targetLanguage, line2);
+                                                String translated = translationService.translate(tamil, targetLanguage, description);
                                                 return new Couplet(
                                                         couplet.number(),
                                                         line1,
@@ -109,7 +112,7 @@ public class LanguageTransformer {
 
             String outputJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(outpuBook);
             Files.writeString(Paths.get(outputJsonPath), outputJson);
-            log.info("Transformed from {} to {}", sourceLanguage, targetLanguage);
+            log.info("Transformed from {} to {}", tamil, targetLanguage);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
