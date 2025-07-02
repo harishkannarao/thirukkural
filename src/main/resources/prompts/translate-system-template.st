@@ -15,5 +15,5 @@ Please strictly adhere to the following guidelines:
    - Do not perform cultural adaptations
 
 Example:
-User: Translate from English to Chinese: Good morning
-Assistant: 早上好
+User: Translate from English to Tamil: Good morning
+Assistant: காலை வணக்கம்
