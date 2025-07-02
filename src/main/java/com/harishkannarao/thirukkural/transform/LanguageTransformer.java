@@ -27,18 +27,21 @@ public class LanguageTransformer {
     private final String tamil = "Tamil";
     private final String english = "English";
     private final String targetLanguage;
+    private final boolean dryRun;
 
     public LanguageTransformer(
             ObjectMapper objectMapper,
             TranslationService translationService,
             @Value("${input.json}") String inputJsonPath,
             @Value("${output.json}") String outputJsonPath,
-            @Value("${target.language}") String targetLanguage) {
+            @Value("${target.language}") String targetLanguage,
+            @Value("${dry.run:false}") boolean dryRun) {
         this.objectMapper = objectMapper;
         this.translationService = translationService;
         this.inputJsonPath = inputJsonPath;
         this.outputJsonPath = outputJsonPath;
         this.targetLanguage = targetLanguage;
+        this.dryRun = dryRun;
     }
 
     public void transformBook() {
@@ -49,9 +52,11 @@ public class LanguageTransformer {
 
             String name = inputBook.name();
             String transliteratedName = translationService.transliterateWithCache(tamil, targetLanguage, name);
+            long limit = dryRun ? 1 : inputBook.volumes().size();
 
             List<Volume> volumes = inputBook.volumes()
                     .stream()
+                    .limit(limit)
                     .map(this::transformVolume)
                     .toList();
             Book outpuBook = new Book(inputBook.name(), transliteratedName, volumes);
@@ -70,7 +75,9 @@ public class LanguageTransformer {
         String englishPaulName = volume.paulTranslation();
         String transliteratedPaul = translationService.transliterateWithCache(tamil, targetLanguage, paulName);
         String translatedPaul = translationService.translateWithCache(english, targetLanguage, englishPaulName);
+        long limit = dryRun ? 1 : volume.chapters().size();
         List<Chapter> chapters = volume.chapters().stream()
+                .limit(limit)
                 .map(chapter -> transformChapter(chapter, paulName, transliteratedPaul, translatedPaul))
                 .toList();
         return new Volume(volume.number(), paulName, transliteratedPaul, translatedPaul, chapters);
@@ -84,7 +91,9 @@ public class LanguageTransformer {
         String translatedAdikaramName = translationService.translateWithCache(english, targetLanguage, chapter.adikaramTranslation());
         String transliteratedIyalName = translationService.transliterateWithCache(tamil, targetLanguage, iyalName);
         String transliteratedAdikaramName = translationService.transliterateWithCache(tamil, targetLanguage, adikaramName);
+        long limit = dryRun ? 2 : chapter.kurals().size();
         List<Couplet> kurals = chapter.kurals().stream()
+                .limit(limit)
                 .map(this::transformKural)
                 .toList();
         return new Chapter(
