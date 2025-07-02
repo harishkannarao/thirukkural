@@ -1,7 +1,7 @@
 package com.harishkannarao.thirukkural;
 
-import com.harishkannarao.thirukkural.data.JsonStructureTransformer;
-import com.harishkannarao.thirukkural.data.LanguageTransformer;
+import com.harishkannarao.thirukkural.transform.JsonStructureTransformer;
+import com.harishkannarao.thirukkural.transform.LanguageTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;

@@ -1,4 +1,4 @@
-package com.harishkannarao.thirukkural.data;
+package com.harishkannarao.thirukkural.transform;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
