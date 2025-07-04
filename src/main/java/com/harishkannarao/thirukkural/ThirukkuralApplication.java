@@ -1,5 +1,6 @@
 package com.harishkannarao.thirukkural;
 
+import com.harishkannarao.thirukkural.epub.EpubCreator;
 import com.harishkannarao.thirukkural.transform.JsonStructureTransformer;
 import com.harishkannarao.thirukkural.transform.LanguageTransformer;
 import org.slf4j.Logger;
@@ -24,6 +25,9 @@ public class ThirukkuralApplication {
 		} else if (Objects.equals(task, "transform_language")) {
 			LanguageTransformer languageTransformer = context.getBean(LanguageTransformer.class);
 			languageTransformer.transformBook();
+		} else if (Objects.equals(task, "create_book")) {
+			EpubCreator languageTransformer = context.getBean(EpubCreator.class);
+			languageTransformer.createBook();
 		}
 	}
 

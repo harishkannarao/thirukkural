@@ -9,6 +9,7 @@ import com.harishkannarao.thirukkural.translate.TranslationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Component
+@ConditionalOnProperty(name = "task", havingValue = "transform_language")
 public class LanguageTransformer {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
