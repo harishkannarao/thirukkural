@@ -70,6 +70,12 @@ public class EpubCreator {
         book.addSection("Title", titleResource);
         book.getGuide().addReference(new GuideReference(titleResource, GuideReference.TITLE_PAGE, "Title"));
 
+        base.volumes().forEach(volume -> {
+            Resource volumeResource = new Resource(createVolume(volume.number(), volume.paulName(), otherLanguages).getBytes(StandardCharsets.UTF_8), "vol-%s.html".formatted(volume.number()));
+            book.addSection( "vol-%s".formatted(volume.number()), volumeResource);
+            book.getGuide().addReference(new GuideReference(volumeResource, GuideReference.TOC, "vol-%s".formatted(volume.number())));
+        });
+
         saveBook(book);
     }
 
@@ -107,6 +113,42 @@ public class EpubCreator {
                         </body>
                     </html>
                 """, title, title, author, generatedDateTime);
+    }
+
+    private String createVolume(Integer volumeNumber, String baseName, List<BookMap> bookMaps) {
+        String baseText = """
+                <span style="text-align:center;">
+                                <h2>%s</h2>
+                            </span>
+                """
+                .formatted(baseName);
+        String otherVolumeNames = bookMaps.stream().sequential()
+                .map(bookMap -> {
+                    String paulTransliteration = bookMap.volumeMap().get(volumeNumber).paulTransliteration();
+                    String paulTranslation = bookMap.volumeMap().get(volumeNumber).paulTranslation();
+                    return """
+                            <span style="text-align:center;">
+                                <h2>%s<br/>(%s)</h2>
+                            </span>
+                            """
+                            .formatted(paulTransliteration, paulTranslation);
+                })
+                .collect(Collectors.joining(System.lineSeparator()));
+        return String.format("""
+                    <html xmlns="http://www.w3.org/1999/xhtml">
+                        <head>
+                            <title>%s</title>
+                        </head>
+                        <body>
+                            <span style="text-align:center;">
+                                <h2>%s</h2>
+                            </span>
+                            %s
+                            <br/>
+                            %s
+                        </body>
+                    </html>
+                """, volumeNumber, volumeNumber, baseText, otherVolumeNames);
     }
 
     private void saveBook(nl.siegmann.epublib.domain.Book book) {
