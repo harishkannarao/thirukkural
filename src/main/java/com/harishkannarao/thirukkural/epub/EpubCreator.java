@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -89,7 +90,9 @@ public class EpubCreator {
     }
 
     private String createTitle(String title, String author) {
-        var generatedDateTime = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+        var generatedDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+                .truncatedTo(ChronoUnit.SECONDS)
+                .format(DateTimeFormatter.ISO_DATE_TIME);
         return String.format("""
                     <html xmlns="http://www.w3.org/1999/xhtml">
                         <head>
