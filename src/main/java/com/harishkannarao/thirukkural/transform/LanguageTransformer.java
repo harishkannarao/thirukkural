@@ -52,8 +52,8 @@ public class LanguageTransformer {
             String inputJson = Files.readString(Paths.get(inputJsonPath));
             Book inputBook = objectMapper.readValue(inputJson, Book.class);
 
-            String name = inputBook.name();
-            String transliteratedName = translationService.transliterateWithCache(tamil, targetLanguage, name);
+            String transliteratedName = translationService
+                    .transliterateWithCache(english, targetLanguage, inputBook.transliteration());
             long limit = dryRun ? 1 : inputBook.volumes().size();
 
             List<Volume> volumes = inputBook.volumes()
