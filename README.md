@@ -33,5 +33,5 @@ Use the `--dry.run=true` to test the transformation to a limited number of volum
 
 #### Creating epub book with multiple languages
 
-    ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=create_book --output.file=./epub/thirukkural.epu --base.json=./data/thirukkural_Base.json --other.language.jsons=./data/thirukkural_English.json,./data/thirukkural_Hindi.json"
+    ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=create_book --output.file=./epub/thirukkural.epub --base.json=./data/thirukkural_Base.json --other.language.jsons=./data/thirukkural_English.json,./data/thirukkural_Hindi.json"
     

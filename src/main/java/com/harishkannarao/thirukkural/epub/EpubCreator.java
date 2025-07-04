@@ -2,6 +2,12 @@ package com.harishkannarao.thirukkural.epub;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.harishkannarao.thirukkural.model.Book;
+import com.harishkannarao.thirukkural.model.BookMap;
+import nl.siegmann.epublib.domain.Author;
+import nl.siegmann.epublib.domain.GuideReference;
+import nl.siegmann.epublib.domain.Metadata;
+import nl.siegmann.epublib.domain.Resource;
+import nl.siegmann.epublib.epub.EpubWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,11 +15,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @ConditionalOnProperty(name = "task", havingValue = "create_book")
@@ -42,16 +54,63 @@ public class EpubCreator {
         log.info("Base {}", baseJson);
         log.info("Other languages {}", otherLanguages);
         Book base = readJsonBook(baseJson);
-        List<Book> otherLanguages = Arrays.stream(this.otherLanguages.split(","))
+        List<BookMap> otherLanguages = Arrays.stream(this.otherLanguages.split(","))
                 .map(this::readJsonBook)
+                .map(BookMap::new)
                 .toList();
 
+        nl.siegmann.epublib.domain.Book book = new nl.siegmann.epublib.domain.Book();
+        Metadata metadata = book.getMetadata();
+        String title = getTitle(base, otherLanguages);
+        String author = "https://github.com/harishkannarao/thirukkural";
+        metadata.addTitle(title);
+        metadata.addAuthor(new Author(author));
+        Resource titleResource = new Resource(createTitle(title, author).getBytes(StandardCharsets.UTF_8), "title.html");
+        book.addSection("Title", titleResource);
+        book.getGuide().addReference(new GuideReference(titleResource, GuideReference.TITLE_PAGE, "Title"));
+
+        saveBook(book);
     }
 
     private Book readJsonBook(String file) {
         try {
             String json = Files.readString(Paths.get(file));
             return objectMapper.readValue(json, Book.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String getTitle(Book book, List<BookMap> bookMaps) {
+        String otherTitles = bookMaps.stream()
+                .map(bookMap -> bookMap.book().transliteration())
+                .collect(Collectors.joining(" / "));
+        return book.name() + " / " + otherTitles;
+    }
+
+    private String createTitle(String title, String author) {
+        var generatedDateTime = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+        return String.format("""
+                    <html xmlns="http://www.w3.org/1999/xhtml">
+                        <head>
+                            <title>%s</title>
+                        </head>
+                        <body>
+                            <div style="text-align:center;">
+                                <h2>%s</h2>
+                                <h4>%s</h4>
+                                <h5>Generated Date: %s</h5>
+                            </div>
+                        </body>
+                    </html>
+                """, title, title, author, generatedDateTime);
+    }
+
+    private void saveBook(nl.siegmann.epublib.domain.Book book) {
+        var epubWriter = new EpubWriter();
+        var file = Paths.get(outputFile).toFile();
+        try {
+            epubWriter.write(book, new FileOutputStream(file));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
