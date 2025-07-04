@@ -35,3 +35,11 @@ Use the `--dry.run=true` to test the transformation to a limited number of volum
 
     ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=create_book --output.file=./epub/thirukkural.epub --base.json=./data/thirukkural_Base.json --other.language.jsons=./data/thirukkural_English.json,./data/thirukkural_Hindi.json"
     
+#### Perform a quick translation
+
+    export OPEN_AI_KEY=<<Open AI Key>>
+    
+    ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=translate_text --text='How are you' --source.language=English --target.language=Tamil --app.ai.chat.provider=openai"
+
+    ./mvnw clean spring-boot:run -Dspring-boot.run.arguments="--task=transliterate_text --text='Thirukkural' --source.language=English --target.language=Hindi --app.ai.chat.provider=openai"
+    

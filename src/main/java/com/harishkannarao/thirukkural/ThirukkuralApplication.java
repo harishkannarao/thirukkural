@@ -3,6 +3,7 @@ package com.harishkannarao.thirukkural;
 import com.harishkannarao.thirukkural.epub.EpubCreator;
 import com.harishkannarao.thirukkural.transform.JsonStructureTransformer;
 import com.harishkannarao.thirukkural.transform.LanguageTransformer;
+import com.harishkannarao.thirukkural.translate.TranslationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -28,6 +29,20 @@ public class ThirukkuralApplication {
 		} else if (Objects.equals(task, "create_book")) {
 			EpubCreator languageTransformer = context.getBean(EpubCreator.class);
 			languageTransformer.createBook();
+		} else if (Objects.equals(task, "translate_text")) {
+			String text = context.getEnvironment().getProperty("text");
+			String source = context.getEnvironment().getProperty("source.language");
+			String target = context.getEnvironment().getProperty("target.language");
+			TranslationService translationService = context.getBean(TranslationService.class);
+			String result = translationService.translate(source, target, text);
+			LOG.info("Translated {} to {}", text, result);
+		} else if (Objects.equals(task, "transliterate_text")) {
+			String text = context.getEnvironment().getProperty("text");
+			String source = context.getEnvironment().getProperty("source.language");
+			String target = context.getEnvironment().getProperty("target.language");
+			TranslationService translationService = context.getBean(TranslationService.class);
+			String result = translationService.transliterate(source, target, text);
+			LOG.info("Transliterated {} to {}", text, result);
 		}
 	}
 
