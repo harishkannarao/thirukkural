@@ -124,12 +124,12 @@ public class EpubCreator {
                         <body>
                             <div style="text-align:center;">
                                 <h2>%s</h2>
-                                <h4>%s</h4>
+                                <h4><a href="%s">%s</a></h4>
                                 <h5>Generated Date: %s</h5>
                             </div>
                         </body>
                     </html>
-                """, title, title, author, generatedDateTime);
+                """, title, title, author, author, generatedDateTime);
     }
 
     private String createVolumeSummary(Book book, List<BookMap> bookMaps) {
