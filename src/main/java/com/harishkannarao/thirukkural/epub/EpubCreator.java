@@ -29,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @ConditionalOnProperty(name = "task", havingValue = "create_book")
@@ -71,10 +72,13 @@ public class EpubCreator {
     }
 
     private void addVolumes(nl.siegmann.epublib.domain.Book book, Book base, List<BookMap> otherLanguages) {
+        Resource volumeSummaryResource = new Resource(createVolumeSummary(base, otherLanguages).getBytes(StandardCharsets.UTF_8), "volume-summary.html");
+        book.addSection("volume-summary", volumeSummaryResource);
+
         base.volumes().forEach(volume -> {
             Resource volumeResource = new Resource(createVolume(volume.number(), volume.paulName(), otherLanguages).getBytes(StandardCharsets.UTF_8), "volume-%s.html".formatted(volume.number()));
             book.addSection("volume-%s".formatted(volume.number()), volumeResource);
-            book.getGuide().addReference(new GuideReference(volumeResource, GuideReference.TOC, "vol-%s".formatted(volume.number())));
+            book.getGuide().addReference(new GuideReference(volumeResource, GuideReference.TOC, "volume-%s".formatted(volume.number())));
 
             Resource volumeChaptersResource = new Resource(createVolumeChapters(volume, otherLanguages).getBytes(StandardCharsets.UTF_8), "volume-%s-chapters.html".formatted(volume.number()));
             book.addSection("volume-%s-chapters".formatted(volume.number()), volumeChaptersResource);
@@ -126,6 +130,34 @@ public class EpubCreator {
                         </body>
                     </html>
                 """, title, title, author, generatedDateTime);
+    }
+
+    private String createVolumeSummary(Book book, List<BookMap> bookMaps) {
+        String volumesSummary = book.volumes().stream()
+                .map(volume -> {
+                    int vNumber = volume.number();
+                    String vName = volume.paulName();
+                    List<String> otherNames = bookMaps.stream()
+                            .map(bookMap -> bookMap.volumeMap().get(vNumber))
+                            .map(Volume::paulTranslation)
+                            .toList();
+                    String volumeNames = Stream.of(Stream.of(String.valueOf(vNumber), vName), otherNames.stream())
+                            .flatMap(it -> it)
+                            .collect(Collectors.joining(" / "));
+                    return """
+                            <span style="text-align:center;">
+                                            <h2>%s</h2>
+                                        </span>
+                            """.formatted(volumeNames);
+                })
+                .collect(Collectors.joining("<br/><br/>"));
+        return String.format("""
+                    <html xmlns="http://www.w3.org/1999/xhtml">
+                        <body>
+                            %s
+                        </body>
+                    </html>
+                """, volumesSummary);
     }
 
     private String createVolume(Integer volumeNumber, String baseName, List<BookMap> bookMaps) {
