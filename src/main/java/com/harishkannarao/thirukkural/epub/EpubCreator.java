@@ -61,6 +61,22 @@ public class EpubCreator {
                 .toList();
 
         nl.siegmann.epublib.domain.Book book = new nl.siegmann.epublib.domain.Book();
+
+        addTitle(book, base, otherLanguages);
+        addVolumes(book, base, otherLanguages);
+
+        saveBook(book);
+    }
+
+    private void addVolumes(nl.siegmann.epublib.domain.Book book, Book base, List<BookMap> otherLanguages) {
+        base.volumes().forEach(volume -> {
+            Resource volumeResource = new Resource(createVolume(volume.number(), volume.paulName(), otherLanguages).getBytes(StandardCharsets.UTF_8), "vol-%s.html".formatted(volume.number()));
+            book.addSection("vol-%s".formatted(volume.number()), volumeResource);
+            book.getGuide().addReference(new GuideReference(volumeResource, GuideReference.TOC, "vol-%s".formatted(volume.number())));
+        });
+    }
+
+    private void addTitle(nl.siegmann.epublib.domain.Book book, Book base, List<BookMap> otherLanguages) {
         Metadata metadata = book.getMetadata();
         String title = getTitle(base, otherLanguages);
         String author = "https://github.com/harishkannarao/thirukkural";
@@ -69,14 +85,6 @@ public class EpubCreator {
         Resource titleResource = new Resource(createTitle(title, author).getBytes(StandardCharsets.UTF_8), "title.html");
         book.addSection("Title", titleResource);
         book.getGuide().addReference(new GuideReference(titleResource, GuideReference.TITLE_PAGE, "Title"));
-
-        base.volumes().forEach(volume -> {
-            Resource volumeResource = new Resource(createVolume(volume.number(), volume.paulName(), otherLanguages).getBytes(StandardCharsets.UTF_8), "vol-%s.html".formatted(volume.number()));
-            book.addSection( "vol-%s".formatted(volume.number()), volumeResource);
-            book.getGuide().addReference(new GuideReference(volumeResource, GuideReference.TOC, "vol-%s".formatted(volume.number())));
-        });
-
-        saveBook(book);
     }
 
     private Book readJsonBook(String file) {
