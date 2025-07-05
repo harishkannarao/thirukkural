@@ -3,6 +3,8 @@ package com.harishkannarao.thirukkural.epub;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.harishkannarao.thirukkural.model.Book;
 import com.harishkannarao.thirukkural.model.BookMap;
+import com.harishkannarao.thirukkural.model.Chapter;
+import com.harishkannarao.thirukkural.model.Volume;
 import nl.siegmann.epublib.domain.Author;
 import nl.siegmann.epublib.domain.GuideReference;
 import nl.siegmann.epublib.domain.Metadata;
@@ -70,9 +72,12 @@ public class EpubCreator {
 
     private void addVolumes(nl.siegmann.epublib.domain.Book book, Book base, List<BookMap> otherLanguages) {
         base.volumes().forEach(volume -> {
-            Resource volumeResource = new Resource(createVolume(volume.number(), volume.paulName(), otherLanguages).getBytes(StandardCharsets.UTF_8), "vol-%s.html".formatted(volume.number()));
-            book.addSection("vol-%s".formatted(volume.number()), volumeResource);
+            Resource volumeResource = new Resource(createVolume(volume.number(), volume.paulName(), otherLanguages).getBytes(StandardCharsets.UTF_8), "volume-%s.html".formatted(volume.number()));
+            book.addSection("volume-%s".formatted(volume.number()), volumeResource);
             book.getGuide().addReference(new GuideReference(volumeResource, GuideReference.TOC, "vol-%s".formatted(volume.number())));
+
+            Resource volumeChaptersResource = new Resource(createVolumeChapters(volume, otherLanguages).getBytes(StandardCharsets.UTF_8), "volume-%s-chapters.html".formatted(volume.number()));
+            book.addSection("volume-%s-chapters".formatted(volume.number()), volumeChaptersResource);
         });
     }
 
@@ -157,6 +162,33 @@ public class EpubCreator {
                         </body>
                     </html>
                 """, volumeNumber, volumeNumber, baseText, otherVolumeNames);
+    }
+
+    private String createVolumeChapters(Volume volume, List<BookMap> bookMaps) {
+        String chapters = volume.chapters().stream()
+                .map(chapter -> {
+                    int cNumber = chapter.number();
+                    String baseName = chapter.adikaramName();
+                    String otherNames = bookMaps.stream()
+                            .map(bookMap -> bookMap.chapterMap().get(cNumber))
+                            .map(Chapter::adikaramTranslation)
+                            .collect(Collectors.joining(" / "));
+                    String chapterName = cNumber + " / " + baseName + " / " + otherNames;
+                    return """
+                            <span style="text-align:center;">
+                                <h2>%s</h2>
+                            </span>
+                            """
+                            .formatted(chapterName);
+                })
+                .collect(Collectors.joining("<br/><br/>"));
+        return String.format("""
+                    <html xmlns="http://www.w3.org/1999/xhtml">
+                        <body>
+                            %s
+                        </body>
+                    </html>
+                """, chapters);
     }
 
     private void saveBook(nl.siegmann.epublib.domain.Book book) {
