@@ -146,9 +146,9 @@ public class EpubCreator {
                             .collect(Collectors.joining(" / "));
                     return """
                             <span style="text-align:center;">
-                                            <h2>%s</h2>
+                                            <a href="volume-%s.html"><h2>%s</h2></a>
                                         </span>
-                            """.formatted(volumeNames);
+                            """.formatted(vNumber, volumeNames);
                 })
                 .collect(Collectors.joining("<br/><br/>"));
         return String.format("""
