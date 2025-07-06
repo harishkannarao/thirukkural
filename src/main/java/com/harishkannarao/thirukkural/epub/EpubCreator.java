@@ -82,7 +82,57 @@ public class EpubCreator {
 
             Resource volumeChaptersResource = new Resource(createVolumeChapters(volume, otherLanguages).getBytes(StandardCharsets.UTF_8), "volume-%s-chapters.html".formatted(volume.number()));
             book.addSection("volume-%s-chapters".formatted(volume.number()), volumeChaptersResource);
+
+            addChapters(book, volume, otherLanguages);
         });
+    }
+
+    private void addChapters(nl.siegmann.epublib.domain.Book book, Volume volume, List<BookMap> otherLanguages) {
+        volume.chapters().forEach(chapter -> {
+            Resource chapterResource = new Resource(createChapter(volume.number(), chapter, otherLanguages).getBytes(StandardCharsets.UTF_8), "chapter-%s.html".formatted(chapter.number()));
+            book.addSection("chapter-%s".formatted(chapter.number()), chapterResource);
+        });
+    }
+
+    private String createChapter(int volumeNumber, Chapter chapter, List<BookMap> otherLanguages) {
+        String baseText = """
+                <span style="text-align:center;">
+                                <h2>%s</h2>
+                                <h4>%s</h4>
+                            </span>
+                """
+                .formatted(chapter.adikaramName(), chapter.iyalName());
+        String otherChapterNames = otherLanguages.stream()
+                .map(bookMap -> {
+                    String adikaramTransliteration = bookMap.chapterMap().get(chapter.number()).adikaramTransliteration();
+                    String adikaramTranslation = bookMap.chapterMap().get(chapter.number()).adikaramTranslation();
+                    String iyalTransliteration = bookMap.chapterMap().get(chapter.number()).iyalTransliteration();
+                    String iyalTranslation = bookMap.chapterMap().get(chapter.number()).iyalTranslation();
+                    return """
+                            <span style="text-align:center;">
+                                <h2>%s ( %s )</h2>
+                                <h4>%s ( %s )</h4>
+                            </span>
+                            """
+                            .formatted(adikaramTransliteration, adikaramTranslation, iyalTransliteration, iyalTranslation);
+                })
+                .collect(Collectors.joining(System.lineSeparator()));
+        return String.format("""
+                    <html xmlns="http://www.w3.org/1999/xhtml">
+                        <body>
+                            <span style="text-align:center;">
+                                <h2>%s</h2>
+                            </span>
+                            %s
+                            %s
+                            <br/>
+                            <br/>
+                            <span style="text-align:center;">
+                                <h2><a href="volume-%s.html">UP</a></h2>
+                            </span>
+                        </body>
+                    </html>
+                """, chapter.number(), baseText, otherChapterNames, volumeNumber);
     }
 
     private void addTitle(nl.siegmann.epublib.domain.Book book, Book base, List<BookMap> otherLanguages) {
@@ -213,10 +263,10 @@ public class EpubCreator {
                     String chapterName = cNumber + " / " + baseName + " / " + otherNames;
                     return """
                             <span style="text-align:center;">
-                                <h2>%s</h2>
+                                <h2><a href="chapter-%s.html">%s</a></h2>
                             </span>
                             """
-                            .formatted(chapterName);
+                            .formatted(chapter.number(), chapterName);
                 })
                 .collect(Collectors.joining("<br/><br/>"));
         return String.format("""
