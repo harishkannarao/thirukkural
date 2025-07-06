@@ -191,6 +191,11 @@ public class EpubCreator {
                             %s
                             <br/>
                             %s
+                            <br/>
+                            <br/>
+                            <span style="text-align:center;">
+                                <h2><a href="volume-summary.html">UP</a></h2>
+                            </span>
                         </body>
                     </html>
                 """, volumeNumber, volumeNumber, baseText, otherVolumeNames);
