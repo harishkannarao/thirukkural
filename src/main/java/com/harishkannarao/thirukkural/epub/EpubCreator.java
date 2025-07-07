@@ -1,10 +1,7 @@
 package com.harishkannarao.thirukkural.epub;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.harishkannarao.thirukkural.model.Book;
-import com.harishkannarao.thirukkural.model.BookMap;
-import com.harishkannarao.thirukkural.model.Chapter;
-import com.harishkannarao.thirukkural.model.Volume;
+import com.harishkannarao.thirukkural.model.*;
 import nl.siegmann.epublib.domain.Author;
 import nl.siegmann.epublib.domain.GuideReference;
 import nl.siegmann.epublib.domain.Metadata;
@@ -91,8 +88,57 @@ public class EpubCreator {
         volume.chapters().forEach(chapter -> {
             Resource chapterResource = new Resource(createChapter(volume.number(), chapter, otherLanguages).getBytes(StandardCharsets.UTF_8), "chapter-%s.html".formatted(chapter.number()));
             book.addSection("chapter-%s".formatted(chapter.number()), chapterResource);
+            addCouplets(book, chapter, otherLanguages);
         });
     }
+
+    private void addCouplets(nl.siegmann.epublib.domain.Book book, Chapter chap, List<BookMap> otherLanguages) {
+        chap.kurals().forEach(kural -> {
+            Resource kuralResource = new Resource(createKural(chap.number(), kural, otherLanguages).getBytes(StandardCharsets.UTF_8), "kural-%s.html".formatted(kural.number()));
+            book.addSection("kural-%s".formatted(kural.number()), kuralResource);
+        });
+    }
+
+    private String createKural(int chapterNumber, Couplet kural, List<BookMap> otherLanguages) {
+        String baseText = """
+                <span style="text-align:center;">
+                    <h4>%s<br/>%s</h4>
+                    <h4>%s</h4>
+                </span>
+                """
+                .formatted(kural.line1(), kural.line2(), kural.description());
+        String otherTexts = otherLanguages.stream()
+                .map(bookMap -> {
+                    String line1 = bookMap.coupletMap().get(kural.number()).line1TransLiteration();
+                    String line2 = bookMap.coupletMap().get(kural.number()).line2TransLiteration();
+                    String description = bookMap.coupletMap().get(kural.number()).translation();
+                    return """
+                            <span style="text-align:center;">
+                                <h4>%s<br/>%s</h4>
+                                <h4>%s</h4>
+                            </span>
+                            """
+                            .formatted(line1, line2, description);
+                })
+                .collect(Collectors.joining(System.lineSeparator()));
+        return String.format("""
+                    <html xmlns="http://www.w3.org/1999/xhtml">
+                        <body>
+                            <span style="text-align:center;">
+                                <h2>%s</h2>
+                            </span>
+                            %s
+                            %s
+                            <br/>
+                            <br/>
+                            <span style="text-align:center;">
+                                <h2><a href="chapter-%s.html">UP</a></h2>
+                            </span>
+                        </body>
+                    </html>
+                """, kural.number(), baseText, otherTexts, chapterNumber);
+    }
+
 
     private String createChapter(int volumeNumber, Chapter chapter, List<BookMap> otherLanguages) {
         String baseText = """
