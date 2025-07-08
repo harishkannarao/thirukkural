@@ -285,7 +285,6 @@ public class EpubCreator {
                                 <h2>%s</h2>
                             </span>
                             %s
-                            <br/>
                             %s
                             <br/>
                             <br/>
