@@ -115,19 +115,16 @@ public class LanguageTransformer {
 
     private Couplet transformKural(Couplet couplet) {
         log.info("Transforming kural {}", couplet.number());
-        String line1 = couplet.line1TransLiteration();
-        String line2 = couplet.line2TransLiteration();
-        String description = couplet.description();
-        String transliteratedLine1 = translationService.transliterate(english, targetLanguage, line1);
-        String transliteratedLine2 = translationService.transliterate(english, targetLanguage, line2);
-        String translated = translationService.translate(tamil, targetLanguage, description);
+        String transliteratedLine1 = translationService.transliterate(english, targetLanguage, couplet.line1TransLiteration());
+        String transliteratedLine2 = translationService.transliterate(english, targetLanguage, couplet.line2TransLiteration());
+        String translated = translationService.translate(tamil, targetLanguage, couplet.description());
         return new Couplet(
                 couplet.number(),
-                line1,
-                line2,
+                couplet.line1(),
+                couplet.line2(),
                 transliteratedLine1,
                 transliteratedLine2,
-                description,
+                couplet.description(),
                 translated
         );
     }
